@@ -9,14 +9,14 @@ import java.util.Random;
 
 public class GameService {
     private Map<String, Game> games = new HashMap<>();
-    private Map<String, Player> players = new HashMap<>(); // Mapa para armazenar jogadores por ID
+    private Map<String, Player> players = new HashMap<>();
     private Random random = new Random();
 
     public Game createGame(Player player1, Player player2) {
         Game game = new Game(player1, player2);
         games.put(game.getGameId(), game);
-        players.put(player1.getId(), player1); // Adiciona player1 ao mapa de jogadores
-        players.put(player2.getId(), player2); // Adiciona player2 ao mapa de jogadores
+        players.put(player1.getId(), player1);
+        players.put(player2.getId(), player2);
         return game;
     }
 
@@ -52,7 +52,7 @@ public class GameService {
     public Player getPlayerStatistics(String playerId) {
         Player player = players.get(playerId);
         if (player == null) {
-            throw new IllegalArgumentException("Player not found with ID: " + playerId);
+            throw new IllegalArgumentException("Jogador não encontrado com a ID: " + playerId);
         }
         return player;
     }

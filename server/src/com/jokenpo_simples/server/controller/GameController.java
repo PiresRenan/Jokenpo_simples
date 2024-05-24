@@ -17,7 +17,7 @@ public class GameController {
 
     public void startServer() {
         try (ServerSocket serverSocket = new ServerSocket(12345)) {
-            System.out.println("Server started");
+            System.out.println("Servidor iniciado!");
 
             while (true) {
                 Socket clientSocket = serverSocket.accept();
@@ -51,7 +51,7 @@ public class GameController {
                 } else if (input.startsWith("STATS")) {
                     String playerId = input.split(" ")[1];
                     Player player = gameService.getPlayerStatistics(playerId);
-                    out.println(player.toString()); // Ajuste conforme a implementação de Player
+                    out.println(player.toString());
                 }
             } catch (Exception e) {
                 e.printStackTrace();

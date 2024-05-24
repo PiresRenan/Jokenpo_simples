@@ -23,11 +23,11 @@ public class ClientController {
              PrintWriter out = new PrintWriter(socket.getOutputStream(), true);
              BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()))) {
 
-            out.println("PLAY " + player1Move + " " + player2Move);
+            out.println("Jogar " + player1Move + " " + player2Move);
             return in.readLine();
         } catch (Exception e) {
             e.printStackTrace();
-            return "Error communicating with server";
+            return "Erro na comunicação com o servidor.";
         }
     }
 
