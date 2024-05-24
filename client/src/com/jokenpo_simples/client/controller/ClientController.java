@@ -1,9 +1,12 @@
 package com.jokenpo_simples.client.controller;
 
-import com.jokenpo_simples.client.Player;
+import com.jokenpo_simples.client.model.Player;
 
-import java.io.IOException;
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
+import java.io.PrintWriter;
 import java.net.Socket;
+import java.io.IOException;
 import java.util.Scanner;
 
 public class ClientController {

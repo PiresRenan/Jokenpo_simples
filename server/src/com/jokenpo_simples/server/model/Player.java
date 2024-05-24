@@ -8,6 +8,14 @@ public class Player {
     private int losses;
     private int draws;
 
+    public Player(String id, String name) {
+        this.id = id;
+        this.name = name;
+        this.wins = 0;
+        this.losses = 0;
+        this.draws = 0;
+    }
+
     public String getId() {
         return id;
     }
@@ -46,5 +54,16 @@ public class Player {
 
     public void setDraws(int draws) {
         this.draws = draws;
+    }
+    public void incrementWins() {
+        this.wins++;
+    }
+
+    public void incrementLosses() {
+        this.losses++;
+    }
+
+    public void incrementDraws() {
+        this.draws++;
     }
 }
