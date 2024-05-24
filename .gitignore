@@ -1,0 +1,33 @@
+# Ignore arquivos buildados
+/build/
+*.class
+
+# Ignore arquivos temporários do sistema
+.DS_Store
+Thumbs.db
+
+# Ignore logs e relatórios de debug
+*.log
+
+# Ignore arquivos de configuração específicos da IDE
+/.idea/
+/*.iml
+/.classpath
+/.project
+/.settings/
+
+# Ignore dependências baixadas via build tools
+/maven/
+/gradle/
+/target/
+
+# Ignore arquivos de configuração específicos do sistema operacional
+*.swp
+*.swo
+*.bak
+*.tmp
+*.old
+
+# Ignore outras pastas e arquivos desnecessários
+/out/
+/bin/

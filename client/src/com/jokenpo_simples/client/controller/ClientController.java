@@ -15,7 +15,17 @@ public class ClientController {
         this.scanner = new Scanner(System.in);
     }
 
-    public void startClient() {}
+    public void startClient() {
+        try (BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+             PrintWriter out = new PrintWriter(socket.getOutputStream(), true)) {
+
+            // Logic to interact with the server
+            // ...
+
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
     private void handleInput() {}
     public static void main(String[] args) {
         try {
