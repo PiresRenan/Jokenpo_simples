@@ -10,32 +10,45 @@ import java.io.IOException;
 import java.util.Scanner;
 
 public class ClientController {
-    private Socket socket;
-    private Scanner scanner;
+    private String serverAddress;
+    private int serverPort;
 
-    public ClientController(String host, int port) throws IOException {
-        this.socket = new Socket(host, port);
-        this.scanner = new Scanner(System.in);
+    public ClientController(String serverAddress, int serverPort) {
+        this.serverAddress = serverAddress;
+        this.serverPort = serverPort;
     }
 
-    public void startClient() {
-        try (BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
-             PrintWriter out = new PrintWriter(socket.getOutputStream(), true)) {
+    public String playGame(String player1Move, String player2Move) {
+        try (Socket socket = new Socket(serverAddress, serverPort);
+             PrintWriter out = new PrintWriter(socket.getOutputStream(), true);
+             BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()))) {
 
-            // Logic to interact with the server
-            // ...
-
-        } catch (IOException e) {
+            out.println("PLAY " + player1Move + " " + player2Move);
+            return in.readLine();
+        } catch (Exception e) {
             e.printStackTrace();
+            return "Error communicating with server";
         }
     }
-    private void handleInput() {}
-    public static void main(String[] args) {
-        try {
-            ClientController client = new ClientController("localhost", 12345);
-            client.startClient();
-        }catch (IOException e) {
+
+    public Player getPlayerStatistics(String playerId) {
+        try (Socket socket = new Socket(serverAddress, serverPort);
+             PrintWriter out = new PrintWriter(socket.getOutputStream(), true);
+             BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()))) {
+
+            out.println("STATS " + playerId);
+            String response = in.readLine();
+            // Supondo que o servidor retorne os dados do jogador em formato JSON ou CSV
+            // Você precisa analisar o formato e criar um objeto Player a partir dele
+            return parsePlayer(response);
+        } catch (Exception e) {
             e.printStackTrace();
+            return null;
         }
+    }
+
+    private Player parsePlayer(String response) {
+        // Implemente a lógica para converter a resposta do servidor em um objeto Player
+        return new Player("Placeholder"); // Substitua pelo verdadeiro parsing
     }
 }

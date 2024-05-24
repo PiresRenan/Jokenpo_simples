@@ -10,7 +10,7 @@ java -cp build com.jokenpo_simples.server.controller.GameController
 
 
 E o mesmo para o programa client:
-javac -d build src/com/jokenpo_simples/client/model/*.java src/com/jokenpo_simples/client/controller/*.java
+javac -d build src/com/jokenpo_simples/client/model/*.java src/com/jokenpo_simples/client/controller/*.java src/com/jokenpo_simples/client/view/*.java
 
 E então executar o arquivo:
-java -cp build com.jokenpo_simples.client.controller.GameController
+java -cp build com.jokenpo_simples.client.view.GameUI
