@@ -1,23 +1,21 @@
 package com.jokenpo_simples.server.controller;
 
-import com.jokenpo_simples.server.model.Game;
-import com.jokenpo_simples.server.model.Player;
+import com.jokenpo_simples.server.database.DatabaseConnection;
 import com.jokenpo_simples.server.service.GameService;
 
 import java.io.BufferedReader;
-import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.net.ServerSocket;
 import java.net.Socket;
-import java.util.Scanner;
 
 public class GameController {
-    private GameService gameService = new GameService();
+    private static GameService gameService = new GameService();
 
-    public void startServer() {
+    public static void startServer() {
         try (ServerSocket serverSocket = new ServerSocket(12345)) {
-            System.out.println("Servidor iniciado!");
+            DatabaseConnection.initializeDatabase();
+            System.out.println("Server is running...");
 
             while (true) {
                 Socket clientSocket = serverSocket.accept();
@@ -28,7 +26,7 @@ public class GameController {
         }
     }
 
-    private class ClientHandler implements Runnable {
+    private static class ClientHandler implements Runnable {
         private Socket clientSocket;
 
         public ClientHandler(Socket socket) {
@@ -39,19 +37,34 @@ public class GameController {
         public void run() {
             try (BufferedReader in = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
                  PrintWriter out = new PrintWriter(clientSocket.getOutputStream(), true)) {
+                String inputLine;
+                while ((inputLine = in.readLine()) != null) {
+                    String[] tokens = inputLine.split(" ");
+                    String command = tokens[0];
 
-                String input = in.readLine();
-                if (input.startsWith("PLAY")) {
-                    String[] parts = input.split(" ");
-                    String player1Move = parts[1];
-                    String player2Move = parts[2];
-                    Game game = gameService.createGame(new Player("Player1"), new Player("Player2"));
-                    String result = gameService.playGame(game.getGameId(), player1Move, player2Move);
-                    out.println(result);
-                } else if (input.startsWith("STATS")) {
-                    String playerId = input.split(" ")[1];
-                    Player player = gameService.getPlayerStatistics(playerId);
-                    out.println(player.toString());
+                    switch (command) {
+                        case "START_GAME":
+                            String playerName = tokens[1];
+                            String gameMode = tokens[2];
+                            String gameId = gameService.createGame(playerName, gameMode);
+                            out.println("Game started with ID: " + gameId);
+                            break;
+
+                        case "PLAY_MOVE":
+                            String move = tokens[1];
+                            String result = gameService.playMove(clientSocket, move);
+                            out.println(result);
+                            break;
+
+                        case "SHOW_STATS":
+                            String stats = gameService.getStats(clientSocket);
+                            out.println(stats);
+                            break;
+
+                        default:
+                            out.println("Unknown command: " + command);
+                            break;
+                    }
                 }
             } catch (Exception e) {
                 e.printStackTrace();
@@ -60,6 +73,6 @@ public class GameController {
     }
 
     public static void main(String[] args) {
-        new GameController().startServer();
+        startServer();
     }
 }

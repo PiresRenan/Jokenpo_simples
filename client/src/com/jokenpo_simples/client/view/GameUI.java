@@ -1,87 +1,143 @@
 package com.jokenpo_simples.client.view;
 
 import com.jokenpo_simples.client.controller.ClientController;
-import com.jokenpo_simples.client.model.Player;
 
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.io.IOException;
+import java.net.Socket;
 
 public class GameUI extends JFrame {
     private ClientController clientController;
-    private Player player1;
-    private Player player2;
-    private JComboBox<String> player1Move;
-    private JComboBox<String> player2Move;
-    private JTextArea resultArea;
+    private String playerName;
 
     public GameUI(ClientController clientController) {
         this.clientController = clientController;
-        player1 = new Player("Player1");
-        player2 = new Player("Player2");
+        initializeUI();
+    }
 
+    private void initializeUI() {
         setTitle("Jokenpo Game");
         setSize(400, 300);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setLocationRelativeTo(null);
 
-        Container container = getContentPane();
-        container.setLayout(new GridLayout(5, 1));
+        JPanel panel = new JPanel();
+        panel.setLayout(new GridLayout(5, 1));
 
-        // Player 1 move
-        JPanel player1Panel = new JPanel();
-        player1Panel.add(new JLabel("Player 1 Move:"));
-        player1Move = new JComboBox<>(new String[]{"Rock", "Paper", "Scissors"});
-        player1Panel.add(player1Move);
-        container.add(player1Panel);
+        JLabel nameLabel = new JLabel("Enter your name:");
+        JTextField nameField = new JTextField();
+        JButton setNameButton = new JButton("Set Name");
+        setNameButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                playerName = nameField.getText();
+                if (playerName != null && !playerName.isEmpty()) {
+                    clientController.setPlayerName(playerName);
+                    nameField.setEnabled(false);
+                    setNameButton.setEnabled(false);
+                } else {
+                    JOptionPane.showMessageDialog(null, "Name cannot be empty!");
+                }
+            }
+        });
 
-        // Player 2 move
-        JPanel player2Panel = new JPanel();
-        player2Panel.add(new JLabel("Player 2 Move:"));
-        player2Move = new JComboBox<>(new String[]{"Rock", "Paper", "Scissors"});
-        player2Panel.add(player2Move);
-        container.add(player2Panel);
+        panel.add(nameLabel);
+        panel.add(nameField);
+        panel.add(setNameButton);
 
-        // Play button
-        JButton playButton = new JButton("Play");
-        playButton.addActionListener(new PlayButtonListener());
-        container.add(playButton);
+        JButton playVsCPUButton = new JButton("Play vs CPU");
+        playVsCPUButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                playVsCPU();
+            }
+        });
+        panel.add(playVsCPUButton);
 
-        // Result area
-        resultArea = new JTextArea();
-        resultArea.setEditable(false);
-        container.add(new JScrollPane(resultArea));
+        JButton playVsPlayerButton = new JButton("Play vs Player");
+        playVsPlayerButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                playVsPlayer();
+            }
+        });
+        panel.add(playVsPlayerButton);
 
-        // Statistics button
-        JButton statsButton = new JButton("Show Player Statistics");
-        statsButton.addActionListener(new StatsButtonListener());
-        container.add(statsButton);
+        JButton statsButton = new JButton("View Statistics");
+        statsButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                viewStatistics();
+            }
+        });
+        panel.add(statsButton);
 
-        setVisible(true);
+        add(panel);
     }
 
-    private class PlayButtonListener implements ActionListener {
-        @Override
-        public void actionPerformed(ActionEvent e) {
-            String player1MoveStr = (String) player1Move.getSelectedItem();
-            String player2MoveStr = (String) player2Move.getSelectedItem();
-            String result = clientController.playGame(player1MoveStr, player2MoveStr);
-            resultArea.setText(result);
+    private void playVsCPU() {
+        if (playerName == null || playerName.isEmpty()) {
+            JOptionPane.showMessageDialog(this, "You must set your name first!");
+            return;
+        }
+
+        String[] options = {"Rock", "Paper", "Scissors"};
+        String playerMove = (String) JOptionPane.showInputDialog(this, "Choose your move:", "Play vs CPU", JOptionPane.PLAIN_MESSAGE, null, options, options[0]);
+        if (playerMove != null) {
+            try {
+                String result = clientController.playVsCPU(playerMove);
+                JOptionPane.showMessageDialog(this, result);
+            } catch (IOException e) {
+                e.printStackTrace();
+                JOptionPane.showMessageDialog(this, "Error: " + e.getMessage());
+            }
         }
     }
 
-    private class StatsButtonListener implements ActionListener {
-        @Override
-        public void actionPerformed(ActionEvent e) {
-            Player player1Stats = clientController.getPlayerStatistics(player1.getId());
-            Player player2Stats = clientController.getPlayerStatistics(player2.getId());
-            resultArea.setText("Player 1 Stats: " + player1Stats + "\nPlayer 2 Stats: " + player2Stats);
+    private void playVsPlayer() {
+        if (playerName == null || playerName.isEmpty()) {
+            JOptionPane.showMessageDialog(this, "You must set your name first!");
+            return;
+        }
+
+        String[] options = {"Rock", "Paper", "Scissors"};
+        String playerMove = (String) JOptionPane.showInputDialog(this, "Choose your move:", "Play vs Player", JOptionPane.PLAIN_MESSAGE, null, options, options[0]);
+        if (playerMove != null) {
+            try {
+                String result = clientController.playVsPlayer(playerMove);
+                JOptionPane.showMessageDialog(this, result);
+            } catch (IOException e) {
+                e.printStackTrace();
+                JOptionPane.showMessageDialog(this, "Error: " + e.getMessage());
+            }
+        }
+    }
+
+    private void viewStatistics() {
+        if (playerName == null || playerName.isEmpty()) {
+            JOptionPane.showMessageDialog(this, "You must set your name first!");
+            return;
+        }
+
+        try {
+            String stats = clientController.getStats(playerName);
+            JOptionPane.showMessageDialog(this, stats);
+        } catch (IOException e) {
+            e.printStackTrace();
+            JOptionPane.showMessageDialog(this, "Error: " + e.getMessage());
         }
     }
 
     public static void main(String[] args) {
-        ClientController clientController = new ClientController("localhost", 12345);
-        new GameUI(clientController);
+        try {
+            Socket socket = new Socket("localhost", 12345);
+            ClientController clientController = new ClientController(socket);
+            SwingUtilities.invokeLater(() -> new GameUI(clientController).setVisible(true));
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 }
