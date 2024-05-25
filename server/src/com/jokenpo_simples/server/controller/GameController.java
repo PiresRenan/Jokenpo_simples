@@ -39,38 +39,32 @@ public class GameController {
                  PrintWriter out = new PrintWriter(clientSocket.getOutputStream(), true)) {
                 String inputLine;
                 while ((inputLine = in.readLine()) != null) {
-                    String[] tokens = inputLine.split(" ");
-                    String command = tokens[0];
-
+                    String[] parts = inputLine.split(" ");
+                    String command = parts[0];
                     switch (command) {
                         case "START_GAME":
-                            String playerName = tokens[1];
-                            String gameMode = tokens[2];
+                            String playerName = parts[1];
+                            String gameMode = parts[2];
                             String gameId = gameService.createGame(playerName, gameMode, clientSocket);
-                            out.println("Game started with ID: " + gameId);
+                            out.println("Game created with ID: " + gameId);
                             break;
-
                         case "JOIN_GAME":
-                            String joinPlayerName = tokens[1];
-                            String joinGameId = gameService.joinOrCreateGame(joinPlayerName, clientSocket);
-                            out.println("Joined or created game with ID: " + joinGameId);
+                            playerName = parts[1];
+                            gameId = gameService.joinOrCreateGame(playerName, clientSocket);
+                            out.println("Joined game with ID: " + gameId);
                             break;
-
                         case "PLAY_MOVE":
-                            String move = tokens[1];
+                            String move = parts[1];
                             String result = gameService.playMove(clientSocket, move);
                             out.println(result);
                             break;
-
                         case "SHOW_STATS":
-                            String statsPlayerName = tokens[1];
-                            String stats = gameService.getStats(statsPlayerName);
+                            playerName = parts[1];
+                            String stats = gameService.getStats(playerName);
                             out.println(stats);
                             break;
-
                         default:
-                            out.println("Unknown command: " + command);
-                            break;
+                            out.println("Unknown command");
                     }
                 }
             } catch (Exception e) {

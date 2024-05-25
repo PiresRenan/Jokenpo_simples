@@ -24,14 +24,6 @@ public class Player {
         this.socket = socket;
     }
 
-    public Player(String id, String name) {
-        this.id = id;
-        this.name = name;
-        this.wins = 0;
-        this.losses = 0;
-        this.draws = 0;
-    }
-
     public String getId() {
         return id;
     }
