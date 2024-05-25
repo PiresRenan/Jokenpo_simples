@@ -1,9 +1,12 @@
 package com.jokenpo_simples.server.model;
 
+import java.net.Socket;
+
 public class Player {
 
     private String id;
     private String name;
+    private Socket socket;
     private int wins;
     private int losses;
     private int draws;
@@ -14,6 +17,11 @@ public class Player {
         this.wins = 0;
         this.losses = 0;
         this.draws = 0;
+    }
+
+    public Player(String name, Socket socket) {
+        this.name = name;
+        this.socket = socket;
     }
 
     public Player(String id, String name) {
@@ -73,5 +81,13 @@ public class Player {
 
     public void incrementDraws() {
         this.draws++;
+    }
+
+    public Socket getSocket() {
+        return socket;
+    }
+
+    public void setSocket(Socket socket) {
+        this.socket = socket;
     }
 }

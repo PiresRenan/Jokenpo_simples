@@ -46,8 +46,14 @@ public class GameController {
                         case "START_GAME":
                             String playerName = tokens[1];
                             String gameMode = tokens[2];
-                            String gameId = gameService.createGame(playerName, gameMode);
+                            String gameId = gameService.createGame(playerName, gameMode, clientSocket);
                             out.println("Game started with ID: " + gameId);
+                            break;
+
+                        case "JOIN_GAME":
+                            String joinPlayerName = tokens[1];
+                            String joinGameId = gameService.joinOrCreateGame(joinPlayerName, clientSocket);
+                            out.println("Joined or created game with ID: " + joinGameId);
                             break;
 
                         case "PLAY_MOVE":
@@ -57,7 +63,8 @@ public class GameController {
                             break;
 
                         case "SHOW_STATS":
-                            String stats = gameService.getStats(clientSocket);
+                            String statsPlayerName = tokens[1];
+                            String stats = gameService.getStats(statsPlayerName);
                             out.println(stats);
                             break;
 

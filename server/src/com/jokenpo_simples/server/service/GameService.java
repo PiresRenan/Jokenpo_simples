@@ -4,6 +4,8 @@ import com.jokenpo_simples.server.database.DatabaseConnection;
 import com.jokenpo_simples.server.model.Game;
 import com.jokenpo_simples.server.model.Player;
 
+import java.io.IOException;
+import java.io.PrintWriter;
 import java.net.Socket;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -18,12 +20,27 @@ public class GameService {
     private Random random = new Random();
     private Map<Socket, String> playerSockets = new HashMap<>();
 
-    public String createGame(String playerName, String gameMode) {
-        Player player1 = new Player(playerName);
-        Player player2 = (gameMode.equals("Player vs CPU")) ? new Player("CPU") : new Player("Player 2");
+    public String createGame(String playerName, String gameMode, Socket socket) {
+        Player player1 = new Player(playerName, socket);
+        Player player2 = (gameMode.equals("Player vs CPU")) ? new Player("CPU", null) : new Player("Player 2", null);
         Game game = new Game(player1, player2);
         games.put(game.getGameId(), game);
+        playerSockets.put(socket, game.getGameId());
         return game.getGameId();
+    }
+
+    public String joinOrCreateGame(String playerName, Socket socket) {
+        for (Map.Entry<String, Game> entry : games.entrySet()) {
+            Game game = entry.getValue();
+            if (game.getPlayer2().getName().equals("Player 2") && game.getPlayer2().getSocket() == null) {
+                game.getPlayer2().setName(playerName);
+                game.getPlayer2().setSocket(socket);
+                playerSockets.put(socket, game.getGameId());
+                return game.getGameId();
+            }
+        }
+        // If no game is available, create a new one
+        return createGame(playerName, "Player vs Player", socket);
     }
 
     public String playMove(Socket clientSocket, String move) {
@@ -32,14 +49,33 @@ public class GameService {
 
         if (game.getPlayer2().getName().equals("CPU")) {
             String cpuMove = getRandomMove();
-            return determineWinner(game, move, cpuMove);
+            String result = determineWinner(game, move, cpuMove);
+            notifyPlayers(game, result);
+            return result;
         } else {
-            if (game.getPlayer1Move() == null) {
+            if (clientSocket.equals(game.getPlayer1().getSocket())) {
                 game.setPlayer1Move(move);
                 return "Waiting for Player 2 to make a move...";
-            } else {
-                return determineWinner(game, game.getPlayer1Move(), move);
+            } else if (clientSocket.equals(game.getPlayer2().getSocket())) {
+                game.setPlayer2Move(move);
+                String result = determineWinner(game, game.getPlayer1Move(), move);
+                notifyPlayers(game, result);
+                return result;
             }
+            return "Invalid player move.";
+        }
+    }
+
+    private void notifyPlayers(Game game, String result) {
+        try {
+            PrintWriter out1 = new PrintWriter(game.getPlayer1().getSocket().getOutputStream(), true);
+            out1.println(result);
+            if (game.getPlayer2().getSocket() != null) {
+                PrintWriter out2 = new PrintWriter(game.getPlayer2().getSocket().getOutputStream(), true);
+                out2.println(result);
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
         }
     }
 
@@ -78,19 +114,19 @@ public class GameService {
         }
     }
 
-    public String getStats(Socket clientSocket) {
-        String playerName = playerSockets.get(clientSocket);
+    public String getStats(String playerName) {
         StringBuilder stats = new StringBuilder();
-        String sql = "SELECT * FROM players WHERE name = ?";
+        String sql = "SELECT * FROM games WHERE player1 = ? OR player2 = ?";
         try (Connection conn = DatabaseConnection.connect();
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
             pstmt.setString(1, playerName);
+            pstmt.setString(2, playerName);
             ResultSet rs = pstmt.executeQuery();
             while (rs.next()) {
-                stats.append("Player: ").append(rs.getString("name")).append("\n")
-                        .append("Wins: ").append(rs.getInt("wins")).append("\n")
-                        .append("Losses: ").append(rs.getInt("losses")).append("\n")
-                        .append("Draws: ").append(rs.getInt("draws")).append("\n");
+                stats.append("Game ID: ").append(rs.getString("id")).append("\n")
+                        .append("Player 1: ").append(rs.getString("player1")).append("\n")
+                        .append("Player 2: ").append(rs.getString("player2")).append("\n")
+                        .append("Result: ").append(rs.getString("result")).append("\n\n");
             }
         } catch (SQLException e) {
             System.out.println(e.getMessage());

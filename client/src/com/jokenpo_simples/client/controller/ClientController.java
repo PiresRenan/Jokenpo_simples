@@ -10,7 +10,6 @@ public class ClientController {
     private Socket socket;
     private PrintWriter out;
     private BufferedReader in;
-    private String playerName;
 
     public ClientController(Socket socket) throws IOException {
         this.socket = socket;
@@ -18,28 +17,28 @@ public class ClientController {
         this.in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
     }
 
-    public void setPlayerName(String playerName) {
-        this.playerName = playerName;
-    }
-
-    public String playVsCPU(String move) throws IOException {
-        out.println("PLAY_VS_CPU:" + playerName + ":" + move);
+    public String startGame(String playerName, String gameMode) throws IOException {
+        out.println("START_GAME " + playerName + " " + gameMode);
         return in.readLine();
     }
 
-    public String playVsPlayer(String move) throws IOException {
-        out.println("PLAY_VS_PLAYER:" + playerName + ":" + move);
+    public String joinOrCreateGame(String playerName) throws IOException {
+        out.println("JOIN_GAME " + playerName);
+        return in.readLine();
+    }
+
+    public String playMove(String move) throws IOException {
+        out.println("PLAY_MOVE " + move);
         return in.readLine();
     }
 
     public String getStats(String playerName) throws IOException {
-        out.println("GET_STATS:" + playerName);
-        return in.readLine();
-    }
-
-    public void close() throws IOException {
-        in.close();
-        out.close();
-        socket.close();
+        out.println("SHOW_STATS " + playerName);
+        StringBuilder stats = new StringBuilder();
+        String line;
+        while ((line = in.readLine()) != null && !line.isEmpty()) {
+            stats.append(line).append("\n");
+        }
+        return stats.toString();
     }
 }

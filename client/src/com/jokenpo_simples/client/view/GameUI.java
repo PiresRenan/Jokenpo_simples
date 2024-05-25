@@ -11,7 +11,6 @@ import java.net.Socket;
 
 public class GameUI extends JFrame {
     private ClientController clientController;
-    private String playerName;
 
     public GameUI(ClientController clientController) {
         this.clientController = clientController;
@@ -22,113 +21,104 @@ public class GameUI extends JFrame {
         setTitle("Jokenpo Game");
         setSize(400, 300);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        setLocationRelativeTo(null);
+        setLayout(new GridLayout(3, 1));
 
-        JPanel panel = new JPanel();
-        panel.setLayout(new GridLayout(5, 1));
+        JPanel loginPanel = new JPanel();
+        JTextField playerNameField = new JTextField(15);
+        JButton startGameButton = new JButton("Start Game");
+        JButton joinGameButton = new JButton("Join Game");
+        loginPanel.add(new JLabel("Player Name:"));
+        loginPanel.add(playerNameField);
+        loginPanel.add(startGameButton);
+        loginPanel.add(joinGameButton);
+        add(loginPanel);
 
-        JLabel nameLabel = new JLabel("Enter your name:");
-        JTextField nameField = new JTextField();
-        JButton setNameButton = new JButton("Set Name");
-        setNameButton.addActionListener(new ActionListener() {
+        JPanel gamePanel = new JPanel();
+        gamePanel.setVisible(false);
+        JButton rockButton = new JButton("Rock");
+        JButton paperButton = new JButton("Paper");
+        JButton scissorsButton = new JButton("Scissors");
+        JLabel resultLabel = new JLabel("");
+        gamePanel.add(rockButton);
+        gamePanel.add(paperButton);
+        gamePanel.add(scissorsButton);
+        gamePanel.add(resultLabel);
+        add(gamePanel);
+
+        JPanel statsPanel = new JPanel();
+        statsPanel.setVisible(false);
+        JTextArea statsArea = new JTextArea(10, 30);
+        JButton showStatsButton = new JButton("Show Stats");
+        statsPanel.add(new JScrollPane(statsArea));
+        statsPanel.add(showStatsButton);
+        add(statsPanel);
+
+        startGameButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                playerName = nameField.getText();
-                if (playerName != null && !playerName.isEmpty()) {
-                    clientController.setPlayerName(playerName);
-                    nameField.setEnabled(false);
-                    setNameButton.setEnabled(false);
-                } else {
-                    JOptionPane.showMessageDialog(null, "Name cannot be empty!");
+                String playerName = playerNameField.getText().trim();
+                if (!playerName.isEmpty()) {
+                    try {
+                        String response = clientController.startGame(playerName, "Player vs Player");
+                        JOptionPane.showMessageDialog(GameUI.this, response);
+                        loginPanel.setVisible(false);
+                        gamePanel.setVisible(true);
+                    } catch (IOException ex) {
+                        ex.printStackTrace();
+                    }
                 }
             }
         });
 
-        panel.add(nameLabel);
-        panel.add(nameField);
-        panel.add(setNameButton);
-
-        JButton playVsCPUButton = new JButton("Play vs CPU");
-        playVsCPUButton.addActionListener(new ActionListener() {
+        joinGameButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                playVsCPU();
+                String playerName = playerNameField.getText().trim();
+                if (!playerName.isEmpty()) {
+                    try {
+                        String response = clientController.joinOrCreateGame(playerName);
+                        JOptionPane.showMessageDialog(GameUI.this, response);
+                        loginPanel.setVisible(false);
+                        gamePanel.setVisible(true);
+                    } catch (IOException ex) {
+                        ex.printStackTrace();
+                    }
+                }
             }
         });
-        panel.add(playVsCPUButton);
 
-        JButton playVsPlayerButton = new JButton("Play vs Player");
-        playVsPlayerButton.addActionListener(new ActionListener() {
+        ActionListener moveListener = new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                playVsPlayer();
+                String move = e.getActionCommand();
+                try {
+                    String result = clientController.playMove(move);
+                    resultLabel.setText(result);
+                } catch (IOException ex) {
+                    ex.printStackTrace();
+                }
             }
-        });
-        panel.add(playVsPlayerButton);
+        };
 
-        JButton statsButton = new JButton("View Statistics");
-        statsButton.addActionListener(new ActionListener() {
+        rockButton.addActionListener(moveListener);
+        paperButton.addActionListener(moveListener);
+        scissorsButton.addActionListener(moveListener);
+
+        showStatsButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                viewStatistics();
+                String playerName = playerNameField.getText().trim();
+                if (!playerName.isEmpty()) {
+                    try {
+                        String stats = clientController.getStats(playerName);
+                        statsArea.setText(stats);
+                        statsPanel.setVisible(true);
+                    } catch (IOException ex) {
+                        ex.printStackTrace();
+                    }
+                }
             }
         });
-        panel.add(statsButton);
-
-        add(panel);
-    }
-
-    private void playVsCPU() {
-        if (playerName == null || playerName.isEmpty()) {
-            JOptionPane.showMessageDialog(this, "You must set your name first!");
-            return;
-        }
-
-        String[] options = {"Rock", "Paper", "Scissors"};
-        String playerMove = (String) JOptionPane.showInputDialog(this, "Choose your move:", "Play vs CPU", JOptionPane.PLAIN_MESSAGE, null, options, options[0]);
-        if (playerMove != null) {
-            try {
-                String result = clientController.playVsCPU(playerMove);
-                JOptionPane.showMessageDialog(this, result);
-            } catch (IOException e) {
-                e.printStackTrace();
-                JOptionPane.showMessageDialog(this, "Error: " + e.getMessage());
-            }
-        }
-    }
-
-    private void playVsPlayer() {
-        if (playerName == null || playerName.isEmpty()) {
-            JOptionPane.showMessageDialog(this, "You must set your name first!");
-            return;
-        }
-
-        String[] options = {"Rock", "Paper", "Scissors"};
-        String playerMove = (String) JOptionPane.showInputDialog(this, "Choose your move:", "Play vs Player", JOptionPane.PLAIN_MESSAGE, null, options, options[0]);
-        if (playerMove != null) {
-            try {
-                String result = clientController.playVsPlayer(playerMove);
-                JOptionPane.showMessageDialog(this, result);
-            } catch (IOException e) {
-                e.printStackTrace();
-                JOptionPane.showMessageDialog(this, "Error: " + e.getMessage());
-            }
-        }
-    }
-
-    private void viewStatistics() {
-        if (playerName == null || playerName.isEmpty()) {
-            JOptionPane.showMessageDialog(this, "You must set your name first!");
-            return;
-        }
-
-        try {
-            String stats = clientController.getStats(playerName);
-            JOptionPane.showMessageDialog(this, stats);
-        } catch (IOException e) {
-            e.printStackTrace();
-            JOptionPane.showMessageDialog(this, "Error: " + e.getMessage());
-        }
     }
 
     public static void main(String[] args) {
