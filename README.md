@@ -39,21 +39,21 @@ O projeto consiste em desenvolver um programa distribuído em Java para jogar Jo
 ### Servidor
 1. **Build do Servidor:**
 ```sh
-javac -cp ".;lib/sqlite-jdbc-3.7.2.jar" -d build src/com/jokenpo_simples/server/model/*.java src/com/jokenpo_simples/server/controller/*.java src/com/jokenpo_simples/server/service/*.java src/com/jokenpo_simples/server/database/*.java
+ javac -cp ".;lib/sqlite-jdbc-3.7.2.jar" -d build src/com/jokenpo_simples/server/model/*.java src/com/jokenpo_simples/server/controller/*.java
 ```
 2. **Execução do Servidor:**
 ```sh
-java -cp ".;lib/sqlite-jdbc-3.7.2.jar;build" com.jokenpo_simples.server.controller.GameController
+java -cp ".;lib/sqlite-jdbc-3.7.2.jar;build" com.jokenpo_simples.server.controller.Servidor
 ```
 
 ### Cliente
 1. **Build do Cliente:**
 
 ```sh
-javac -cp ".;lib/sqlite-jdbc-3.7.2.jar" -d build src/com/jokenpo_simples/client/model/*.java src/com/jokenpo_simples/client/controller/*.java src/com/jokenpo_simples/client/view/*.java
+ javac -d build src/com/jokenpo_simples/client/*.java src/com/jokenpo_simples/client/controller/*.java src/com/jokenpo_simples/client/model/*.java src/com/jokenpo_simples/client/view/*.java
 ```
 
 2. **Execução do Cliente:**
 ```sh
-java -cp ".;lib/sqlite-jdbc-3.7.2.jar;build" com.jokenpo_simples.client.view.GameUI
+java -cp build com.jokenpo_simples.client.ClienteJokenpo                            
 ```

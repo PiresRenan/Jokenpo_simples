@@ -16,6 +16,20 @@ Thumbs.db
 /.project
 /.settings/
 
+server/.idea/
+server/*.iml
+server/.classpath
+server/.project
+server/.settings/
+server/*.db
+
+client/.idea/
+client/*.iml
+client/.classpath
+client/.project
+client/.settings/
+client/*.db
+
 # Ignore dependências baixadas via build tools
 /maven/
 /gradle/
