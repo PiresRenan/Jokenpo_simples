@@ -32,8 +32,9 @@ public class JokenpoView {
     public int mostrarMenu() {
         System.out.println("\nEscolha uma opção:");
         System.out.println("1. Jogar contra a CPU");
-        System.out.println("2. Ver estatísticas");
-        System.out.println("3. Sair");
+        System.out.println("2. Jogar contra outro jogador");
+        System.out.println("3. Ver estatísticas");
+        System.out.println("4. Sair");
         return scanner.nextInt();
     }
 

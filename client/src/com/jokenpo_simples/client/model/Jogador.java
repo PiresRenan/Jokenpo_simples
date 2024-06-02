@@ -7,7 +7,6 @@ public class Jogador {
     private int derrotas;
     private int empates;
 
-    // Construtor vazio para o Gson
     public Jogador() {}
 
     public Jogador(int id, String nome, int vitorias, int derrotas, int empates) {

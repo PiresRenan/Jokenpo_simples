@@ -10,7 +10,6 @@ import java.net.*;
 import java.util.ArrayList;
 import java.util.List;
 
-
 public class JokenpoController {
 
     private JokenpoView view;
@@ -58,15 +57,18 @@ public class JokenpoController {
                     jogarContraCPU();
                     break;
                 case 2:
-                    verEstatisticas();
+                    jogarContraJogador();
                     break;
                 case 3:
+                    verEstatisticas();
+                    break;
+                case 4:
                     view.exibirMensagem("Saindo...");
                     break;
                 default:
                     view.exibirMensagem("Opção inválida!");
             }
-        } while (opcao != 3);
+        } while (opcao != 4);
     }
 
     private void jogarContraCPU() {
@@ -90,12 +92,39 @@ public class JokenpoController {
         }
     }
 
+    private void jogarContraJogador() {
+        Jogada jogada = view.obterJogada();
+        saida.println("JOGAR_JOGADOR:" + jogada);
+        try {
+            String resposta = entrada.readLine();
+            if (resposta.equals("AGUARDANDO_OPONENTE")) {
+                view.exibirMensagem("Aguardando outro jogador...");
+                resposta = entrada.readLine();
+            }
+
+            String[] answer = resposta.split(":");
+            String[] partes = answer[1].split(",");
+
+            if (answer[0].equals("RESULTADO_JOGADOR") && partes.length == 3) {
+                Resultado resultado = Resultado.valueOf(partes[0]);
+                Jogada jogadaOponente = Jogada.valueOf(partes[1]);
+                Jogada jogadaJogador = Jogada.valueOf(partes[2]);
+                historicoPartidas.add("Contra Jogador: Você jogou " + jogadaJogador + ", Oponente jogou " + jogadaOponente + ". Resultado: " + resultado);
+                view.exibirMensagem("Você jogou " + jogadaJogador + ", Oponente jogou " + jogadaOponente + ". Resultado: " + resultado);
+            } else {
+                view.exibirMensagem("Erro ao processar resposta do servidor: " + resposta);
+            }
+        } catch (IOException e) {
+            view.exibirMensagem("Erro ao receber resposta do servidor: " + e.getMessage());
+        }
+    }
+
     private void verEstatisticas() {
         saida.println("VER_ESTATISTICAS");
         try {
             String resposta = entrada.readLine();
             if (resposta.startsWith("Vitorias:")) {
-                view.exibirMensagem("Estastísticas: " + resposta);
+                view.exibirMensagem("Estatísticas: " + resposta);
             } else {
                 view.exibirMensagem("Erro ao obter estatísticas: " + resposta);
             }

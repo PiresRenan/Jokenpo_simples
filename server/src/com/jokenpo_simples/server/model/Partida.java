@@ -1,11 +1,20 @@
 package com.jokenpo_simples.server.model;
 
 public class Partida {
+    private int id;
     private Jogador jogador1;
     private Jogador jogador2;
     private Jogada jogadaJogador1;
     private Jogada jogadaJogador2;
-    private int resultado; // 0 = empate, 1 = jogador1 vence, 2 = jogador2 vence
+    private int resultado;
+
+    public int getId() {
+        return id;
+    }
+
+    public void setId(int id) {
+        this.id = id;
+    }
 
     public Jogador getJogador1() {
         return jogador1;
@@ -47,8 +56,4 @@ public class Partida {
         this.resultado = resultado;
     }
 
-    public void determinarResultado() {
-        // Lógica para determinar o vencedor com base nas jogadas
-        // ...
-    }
 }

@@ -1,13 +1,12 @@
 package com.jokenpo_simples.server.controller;
 
 import com.jokenpo_simples.server.model.Jogador;
+import com.jokenpo_simples.server.model.Partida;
 import com.jokenpo_simples.server.model.Resultado;
 import com.jokenpo_simples.server.model.Jogada;
 
 import java.io.File;
 import java.sql.*;
-import java.util.ArrayList;
-import java.util.List;
 
 public class GerenciadorBancoDados {
     private static final String URL_CONEXAO = "jdbc:sqlite:jokenpo.db";
@@ -18,6 +17,7 @@ public class GerenciadorBancoDados {
             criarBancoDeDadosSeNaoExistir();
             criarTabelaJogadoresSeNaoExistir();
             criarTabelaHistoricoPartidasSeNaoExistir();
+            criarTabelaPartidasPendentesSeNaoExistir();
         } catch (ClassNotFoundException e) {
             System.err.println("Erro ao carregar o driver SQLite: " + e.getMessage());
         } catch (SQLException e) {
@@ -62,6 +62,20 @@ public class GerenciadorBancoDados {
                     "jogada_cpu TEXT NOT NULL," +
                     "resultado TEXT NOT NULL," +
                     "FOREIGN KEY(id_jogador) REFERENCES jogadores(id)" +
+                    ")";
+            try (Statement stmt = conn.createStatement()) {
+                stmt.execute(sql);
+            }
+        }
+    }
+
+    private static void criarTabelaPartidasPendentesSeNaoExistir() throws SQLException {
+        try (Connection conn = obterConexao()) {
+            String sql = "CREATE TABLE IF NOT EXISTS partidas_pendentes (" +
+                    "id INTEGER PRIMARY KEY AUTOINCREMENT," +
+                    "id_jogador1 INTEGER," +
+                    "jogada_jogador1 TEXT," +
+                    "FOREIGN KEY(id_jogador1) REFERENCES jogadores(id)" +
                     ")";
             try (Statement stmt = conn.createStatement()) {
                 stmt.execute(sql);
@@ -166,5 +180,40 @@ public class GerenciadorBancoDados {
             stmt.setString(4, resultado.name());
             stmt.executeUpdate();
         }
+    }
+
+    public static Partida criarPartida(Connection conn, int idJogador1, Jogada jogadaJogador1) throws SQLException {
+        String sql = "INSERT INTO partidas_pendentes (id_jogador1, jogada_jogador1) VALUES (?, ?)";
+        try (PreparedStatement stmt = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
+            stmt.setInt(1, idJogador1);
+            stmt.setString(2, jogadaJogador1.name());
+            stmt.executeUpdate();
+            try (ResultSet rs = stmt.getGeneratedKeys()) {
+                if (rs.next()) {
+                    int id = rs.getInt(1);
+                    Partida partida = new Partida();
+                    partida.setId(id);
+                    partida.setJogador1(new Jogador(idJogador1, null, 0, 0, 0));
+                    partida.setJogadaJogador1(jogadaJogador1);
+                    return partida;
+                }
+            }
+        }
+        throw new SQLException("Falha ao criar partida");
+    }
+
+    public static Partida obterPartidaPendente(Connection conn) throws SQLException {
+        String sql = "SELECT * FROM partidas_pendentes LIMIT 1";
+        try (Statement stmt = conn.createStatement();
+             ResultSet rs = stmt.executeQuery(sql)) {
+            if (rs.next()) {
+                Partida partida = new Partida();
+                partida.setId(rs.getInt("id"));
+                partida.setJogador1(new Jogador(rs.getInt("id_jogador1"), null, 0, 0, 0));
+                partida.setJogadaJogador1(Jogada.valueOf(rs.getString("jogada_jogador1")));
+                return partida;
+            }
+        }
+        return null;
     }
 }

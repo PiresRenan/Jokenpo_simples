@@ -13,10 +13,9 @@ public class Servidor {
             System.out.println("Servidor Jokenpo iniciado na porta " + PORTA);
 
             while (true) {
-                Socket clienteSocket = serverSocket.accept(); // Aguarda conexão de um cliente
+                Socket clienteSocket = serverSocket.accept();
                 System.out.println("Cliente conectado: " + clienteSocket.getInetAddress());
 
-                // Cria uma nova thread para o cliente
                 pool.execute(new GerenciadorPartidas(clienteSocket));
             }
         } catch (IOException e) {
