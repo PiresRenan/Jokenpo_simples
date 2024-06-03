@@ -67,10 +67,12 @@ public class GerenciadorPartidas implements Runnable {
                     Jogada jogadaCPU = Jogada.values()[new Random().nextInt(Jogada.values().length)];
                     Resultado resultado = calcularResultado(jogadaCliente, jogadaCPU);
                     GerenciadorBancoDados.atualizarEstatisticas(conn, this.jogador.getId(), resultado);
-                    GerenciadorBancoDados.adicionarPartidaAoHistorico(conn, this.jogador.getId(), Jogada.valueOf(String.valueOf(jogadaCliente)), jogadaCPU, resultado);
+                    GerenciadorBancoDados.adicionarPartidaAoHistorico(conn, this.jogador.getId(), jogadaCliente, jogadaCPU, resultado);
                     return "RESULTADO_CPU:" + resultado + "," + jogadaCPU;
                 case "JOGAR_JOGADOR":
                     return processarJogadaJogador(conn, Jogada.valueOf(dados));
+                case "VERIFICAR_PARTIDA":
+                    return verificarPartida(conn, Integer.parseInt(dados));
                 case "VER_ESTATISTICAS":
                     this.jogador = GerenciadorBancoDados.obterJogador(conn, this.jogador.getId());
                     String stats = GerenciadorBancoDados.obterEstatisticas(conn, this.jogador.getId());
@@ -88,17 +90,32 @@ public class GerenciadorPartidas implements Runnable {
         Partida partida = GerenciadorBancoDados.obterPartidaPendente(conn);
         if (partida == null) {
             partida = GerenciadorBancoDados.criarPartida(conn, this.jogador.getId(), jogadaJogador1);
-            return "AGUARDANDO_OPONENTE";
+            return "AGUARDANDO_OPONENTE:" + partida.getId();
         } else {
-            Jogador oponente = GerenciadorBancoDados.obterJogador(conn, partida.getJogador1().getId());
+            GerenciadorBancoDados.atualizarPartidaPendente(conn, partida.getId(), this.jogador.getId(), jogadaJogador1);
             Jogada jogadaJogador2 = jogadaJogador1;
             Jogada jogadaJogador1Anterior = partida.getJogadaJogador1();
-            Resultado resultado = calcularResultado(jogadaJogador1Anterior, jogadaJogador2);
-            GerenciadorBancoDados.atualizarEstatisticas(conn, partida.getJogador1().getId(), resultado);
-            GerenciadorBancoDados.atualizarEstatisticas(conn, this.jogador.getId(), resultado == Resultado.VITORIA ? Resultado.DERROTA : resultado == Resultado.DERROTA ? Resultado.VITORIA : Resultado.EMPATE);
-            GerenciadorBancoDados.adicionarPartidaAoHistorico(conn, partida.getJogador1().getId(), jogadaJogador1Anterior, jogadaJogador2, resultado);
-            GerenciadorBancoDados.adicionarPartidaAoHistorico(conn, this.jogador.getId(), jogadaJogador2, jogadaJogador1Anterior, resultado);
-            return "RESULTADO_JOGADOR:" + resultado + "," + jogadaJogador1Anterior + "," + jogadaJogador2;
+            Resultado resultadoJogador1 = calcularResultado(jogadaJogador1Anterior, jogadaJogador2);
+            Resultado resultadoJogador2 = calcularResultado(jogadaJogador2, jogadaJogador1Anterior);
+            GerenciadorBancoDados.atualizarEstatisticas(conn, partida.getJogador1().getId(), resultadoJogador1);
+            GerenciadorBancoDados.atualizarEstatisticas(conn, this.jogador.getId(), resultadoJogador2);
+            GerenciadorBancoDados.adicionarPartidaAoHistorico(conn, partida.getJogador1().getId(), jogadaJogador1Anterior, jogadaJogador2, resultadoJogador1);
+            GerenciadorBancoDados.adicionarPartidaAoHistorico(conn, this.jogador.getId(), jogadaJogador2, jogadaJogador1Anterior, resultadoJogador2);
+            GerenciadorBancoDados.removerPartidaPendente(conn, partida.getId());
+            return "RESULTADO_JOGADOR:" + resultadoJogador2 + "," + jogadaJogador1Anterior + "," + jogadaJogador2;
+        }
+    }
+
+    private String verificarPartida(Connection conn, int idPartida) throws SQLException {
+        Partida partida = GerenciadorBancoDados.obterPartida(conn, idPartida);
+        if (partida == null) {
+            return "ERRO:Partida não encontrada";
+        }
+        if (partida.getJogadaJogador2() == null) {
+            return "AGUARDANDO_OPONENTE";
+        } else {
+            Resultado resultadoJogador1 = calcularResultado(partida.getJogadaJogador1(), partida.getJogadaJogador2());
+            return "RESULTADO_JOGADOR:" + resultadoJogador1 + "," + partida.getJogadaJogador1() + "," + partida.getJogadaJogador2();
         }
     }
 

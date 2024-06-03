@@ -2,11 +2,13 @@ package com.jokenpo_simples.server.controller;
 
 import com.jokenpo_simples.server.model.Jogador;
 import com.jokenpo_simples.server.model.Partida;
-import com.jokenpo_simples.server.model.Resultado;
 import com.jokenpo_simples.server.model.Jogada;
+import com.jokenpo_simples.server.model.Resultado;
 
 import java.io.File;
 import java.sql.*;
+import java.util.ArrayList;
+import java.util.List;
 
 public class GerenciadorBancoDados {
     private static final String URL_CONEXAO = "jdbc:sqlite:jokenpo.db";
@@ -75,7 +77,10 @@ public class GerenciadorBancoDados {
                     "id INTEGER PRIMARY KEY AUTOINCREMENT," +
                     "id_jogador1 INTEGER," +
                     "jogada_jogador1 TEXT," +
-                    "FOREIGN KEY(id_jogador1) REFERENCES jogadores(id)" +
+                    "id_jogador2 INTEGER," +
+                    "jogada_jogador2 TEXT," +
+                    "FOREIGN KEY(id_jogador1) REFERENCES jogadores(id)," +
+                    "FOREIGN KEY(id_jogador2) REFERENCES jogadores(id)" +
                     ")";
             try (Statement stmt = conn.createStatement()) {
                 stmt.execute(sql);
@@ -203,7 +208,7 @@ public class GerenciadorBancoDados {
     }
 
     public static Partida obterPartidaPendente(Connection conn) throws SQLException {
-        String sql = "SELECT * FROM partidas_pendentes LIMIT 1";
+        String sql = "SELECT * FROM partidas_pendentes WHERE jogada_jogador2 IS NULL LIMIT 1";
         try (Statement stmt = conn.createStatement();
              ResultSet rs = stmt.executeQuery(sql)) {
             if (rs.next()) {
@@ -215,5 +220,43 @@ public class GerenciadorBancoDados {
             }
         }
         return null;
+    }
+
+    public static Partida obterPartida(Connection conn, int idPartida) throws SQLException {
+        String sql = "SELECT * FROM partidas_pendentes WHERE id = ?";
+        try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setInt(1, idPartida);
+            try (ResultSet rs = stmt.executeQuery()) {
+                if (rs.next()) {
+                    Partida partida = new Partida();
+                    partida.setId(rs.getInt("id"));
+                    partida.setJogador1(new Jogador(rs.getInt("id_jogador1"), null, 0, 0, 0));
+                    partida.setJogadaJogador1(Jogada.valueOf(rs.getString("jogada_jogador1")));
+                    if (rs.getString("jogada_jogador2") != null) {
+                        partida.setJogadaJogador2(Jogada.valueOf(rs.getString("jogada_jogador2")));
+                    }
+                    return partida;
+                }
+            }
+        }
+        return null;
+    }
+
+    public static void atualizarPartidaPendente(Connection conn, int idPartida, int idJogador2, Jogada jogadaJogador2) throws SQLException {
+        String sql = "UPDATE partidas_pendentes SET id_jogador2 = ?, jogada_jogador2 = ? WHERE id = ?";
+        try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setInt(1, idJogador2);
+            stmt.setString(2, jogadaJogador2.name());
+            stmt.setInt(3, idPartida);
+            stmt.executeUpdate();
+        }
+    }
+
+    public static void removerPartidaPendente(Connection conn, int idPartida) throws SQLException {
+        String sql = "DELETE FROM partidas_pendentes WHERE id = ?";
+        try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setInt(1, idPartida);
+            stmt.executeUpdate();
+        }
     }
 }

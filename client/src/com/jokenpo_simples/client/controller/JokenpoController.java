@@ -95,22 +95,43 @@ public class JokenpoController {
     private void jogarContraJogador() {
         Jogada jogada = view.obterJogada();
         saida.println("JOGAR_JOGADOR:" + jogada);
+
         try {
             String resposta = entrada.readLine();
-            if (resposta.equals("AGUARDANDO_OPONENTE")) {
+            if (resposta.startsWith("AGUARDANDO_OPONENTE:")) {
+                int idPartida = Integer.parseInt(resposta.split(":")[1]);
                 view.exibirMensagem("Aguardando outro jogador...");
-                resposta = entrada.readLine();
-            }
 
-            String[] answer = resposta.split(":");
-            String[] partes = answer[1].split(",");
-
-            if (answer[0].equals("RESULTADO_JOGADOR") && partes.length == 3) {
-                Resultado resultado = Resultado.valueOf(partes[0]);
-                Jogada jogadaOponente = Jogada.valueOf(partes[1]);
-                Jogada jogadaJogador = Jogada.valueOf(partes[2]);
-                historicoPartidas.add("Contra Jogador: Você jogou " + jogadaJogador + ", Oponente jogou " + jogadaOponente + ". Resultado: " + resultado);
-                view.exibirMensagem("Você jogou " + jogadaJogador + ", Oponente jogou " + jogadaOponente + ". Resultado: " + resultado);
+                while (true) {
+                    try {
+                        Thread.sleep(1000);
+                        saida.println("VERIFICAR_PARTIDA:" + idPartida);
+                        resposta = entrada.readLine();
+                        if (resposta.startsWith("RESULTADO_JOGADOR:")) {
+                            String[] partes = resposta.split(":")[1].split(",");
+                            if (partes.length == 3) {
+                                Resultado resultado = Resultado.valueOf(partes[0]);
+                                Jogada jogadaOponente = Jogada.valueOf(partes[1]);
+                                Jogada jogadaJogador = Jogada.valueOf(partes[2]);
+                                historicoPartidas.add(
+                                        "Contra Jogador: Você jogou " + jogadaJogador + ", adversário jogou " + jogadaOponente + ". Resultado: " + resultado
+                                );
+                                view.exibirMensagem(
+                                        "Você jogou " + jogadaJogador + ", adversário jogou " + jogadaOponente + ". Resultado: " + resultado
+                                );
+                                break; // Sai do loop quando a partida termina
+                            } else {
+                                view.exibirMensagem("Erro: Formato de resposta inválido.");
+                            }
+                        } else if (resposta.startsWith("ERRO:")) {
+                            view.exibirMensagem(resposta);
+                            break;
+                        }
+                    } catch (InterruptedException e) {
+                        view.exibirMensagem("Erro ao aguardar resposta do servidor: " + e.getMessage());
+                        break; // Sai do loop em caso de erro
+                    }
+                }
             } else {
                 view.exibirMensagem("Erro ao processar resposta do servidor: " + resposta);
             }
