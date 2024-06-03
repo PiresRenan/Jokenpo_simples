@@ -119,7 +119,7 @@ public class JokenpoController {
                                 view.exibirMensagem(
                                         "Você jogou " + jogadaJogador + ", adversário jogou " + jogadaOponente + ". Resultado: " + resultado
                                 );
-                                break; // Sai do loop quando a partida termina
+                                break;
                             } else {
                                 view.exibirMensagem("Erro: Formato de resposta inválido.");
                             }
@@ -129,8 +129,23 @@ public class JokenpoController {
                         }
                     } catch (InterruptedException e) {
                         view.exibirMensagem("Erro ao aguardar resposta do servidor: " + e.getMessage());
-                        break; // Sai do loop em caso de erro
+                        break;
                     }
+                }
+            } else if (resposta.startsWith("RESULTADO_JOGADOR:")){
+                String[] partes = resposta.split(":")[1].split(",");
+                if (partes.length == 3) {
+                    Resultado resultado = Resultado.valueOf(partes[0]);
+                    Jogada jogadaOponente = Jogada.valueOf(partes[1]);
+                    Jogada jogadaJogador = Jogada.valueOf(partes[2]);
+                    historicoPartidas.add(
+                            "Contra Jogador: Você jogou " + jogadaJogador + ", adversário jogou " + jogadaOponente + ". Resultado: " + resultado
+                    );
+                    view.exibirMensagem(
+                            "Você jogou " + jogadaJogador + ", adversário jogou " + jogadaOponente  + ". Resultado: " + resultado
+                    );
+                } else {
+                    view.exibirMensagem("Erro: Formato de resposta inválido.");
                 }
             } else {
                 view.exibirMensagem("Erro ao processar resposta do servidor: " + resposta);

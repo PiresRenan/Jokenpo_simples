@@ -86,23 +86,21 @@ public class GerenciadorPartidas implements Runnable {
         }
     }
 
-    private String processarJogadaJogador(Connection conn, Jogada jogadaJogador1) throws SQLException {
+    private String processarJogadaJogador(Connection conn, Jogada jogadaJogador2) throws SQLException {
         Partida partida = GerenciadorBancoDados.obterPartidaPendente(conn);
         if (partida == null) {
-            partida = GerenciadorBancoDados.criarPartida(conn, this.jogador.getId(), jogadaJogador1);
+            partida = GerenciadorBancoDados.criarPartida(conn, this.jogador.getId(), jogadaJogador2);
             return "AGUARDANDO_OPONENTE:" + partida.getId();
         } else {
-            GerenciadorBancoDados.atualizarPartidaPendente(conn, partida.getId(), this.jogador.getId(), jogadaJogador1);
-            Jogada jogadaJogador2 = jogadaJogador1;
-            Jogada jogadaJogador1Anterior = partida.getJogadaJogador1();
-            Resultado resultadoJogador1 = calcularResultado(jogadaJogador1Anterior, jogadaJogador2);
-            Resultado resultadoJogador2 = calcularResultado(jogadaJogador2, jogadaJogador1Anterior);
+            GerenciadorBancoDados.atualizarPartidaPendente(conn, partida.getId(), this.jogador.getId(), jogadaJogador2);
+            Jogada jogadaJogador1 = partida.getJogadaJogador1();
+            Resultado resultadoJogador1 = calcularResultado(jogadaJogador1, jogadaJogador2);
+            Resultado resultadoJogador2 = calcularResultado(jogadaJogador2, jogadaJogador1);
             GerenciadorBancoDados.atualizarEstatisticas(conn, partida.getJogador1().getId(), resultadoJogador1);
             GerenciadorBancoDados.atualizarEstatisticas(conn, this.jogador.getId(), resultadoJogador2);
-            GerenciadorBancoDados.adicionarPartidaAoHistorico(conn, partida.getJogador1().getId(), jogadaJogador1Anterior, jogadaJogador2, resultadoJogador1);
-            GerenciadorBancoDados.adicionarPartidaAoHistorico(conn, this.jogador.getId(), jogadaJogador2, jogadaJogador1Anterior, resultadoJogador2);
-            GerenciadorBancoDados.removerPartidaPendente(conn, partida.getId());
-            return "RESULTADO_JOGADOR:" + resultadoJogador2 + "," + jogadaJogador1Anterior + "," + jogadaJogador2;
+            GerenciadorBancoDados.adicionarPartidaAoHistorico(conn, partida.getJogador1().getId(), jogadaJogador1, jogadaJogador2, resultadoJogador1);
+            GerenciadorBancoDados.adicionarPartidaAoHistorico(conn, this.jogador.getId(), jogadaJogador2, jogadaJogador1, resultadoJogador2);
+            return "RESULTADO_JOGADOR:" + resultadoJogador2 + "," + jogadaJogador1 + "," + jogadaJogador2;
         }
     }
 

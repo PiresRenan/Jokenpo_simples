@@ -252,11 +252,4 @@ public class GerenciadorBancoDados {
         }
     }
 
-    public static void removerPartidaPendente(Connection conn, int idPartida) throws SQLException {
-        String sql = "DELETE FROM partidas_pendentes WHERE id = ?";
-        try (PreparedStatement stmt = conn.prepareStatement(sql)) {
-            stmt.setInt(1, idPartida);
-            stmt.executeUpdate();
-        }
-    }
 }
