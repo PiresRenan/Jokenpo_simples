@@ -119,13 +119,23 @@ public class GerenciadorBancoDados {
     }
 
     public static void atualizarEstatisticas(Connection conn, int idJogador, Resultado resultado) throws SQLException {
-        String coluna = switch (resultado) {
-            case VITORIA -> "vitorias";
-            case DERROTA -> "derrotas";
-            case EMPATE -> "empates";
-        };
+        String coluna;
+        switch (resultado) {
+            case VITORIA:
+                coluna = "vitorias";
+                break;
+            case DERROTA:
+                coluna = "derrotas";
+                break;
+            case EMPATE:
+                coluna = "empates";
+                break;
+            default:
+                throw new IllegalArgumentException("Resultado inválido: " + resultado);
+        }
 
         String sql = "UPDATE jogadores SET " + coluna + " = " + coluna + " + 1 WHERE id = ?";
+
         try (PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setInt(1, idJogador);
             stmt.executeUpdate();
