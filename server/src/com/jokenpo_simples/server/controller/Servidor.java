@@ -2,6 +2,7 @@ package com.jokenpo_simples.server.controller;
 
 import java.io.*;
 import java.net.*;
+import java.util.Scanner;
 import java.util.concurrent.*;
 
 public class Servidor {
@@ -9,8 +10,12 @@ public class Servidor {
     private static final ExecutorService pool = Executors.newFixedThreadPool(10);
 
     public static void main(String[] args) {
-        try (ServerSocket serverSocket = new ServerSocket(PORTA)) {
-            System.out.println("Servidor Jokenpo iniciado na porta " + PORTA);
+        Scanner scanner = new Scanner(System.in);
+        System.out.print("Digite o endereço IP do servidor (ou deixe em branco para usar todos): ");
+        String enderecoIP = scanner.nextLine();
+
+        try (ServerSocket serverSocket = new ServerSocket(PORTA, 0, enderecoIP.isEmpty() ? null : InetAddress.getByName(enderecoIP))) {
+            System.out.println("Servidor Jokenpo iniciado na porta " + PORTA + (enderecoIP.isEmpty() ? "" : ", IP: " + enderecoIP));
 
             while (true) {
                 Socket clienteSocket = serverSocket.accept();
